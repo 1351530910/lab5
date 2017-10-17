@@ -19,50 +19,31 @@ public class ColorSensor extends Thread {
 		
 		float filter[] = new float[COUNT_MAX];
 		
-		//to finish this when light mode is finished in order to save some cpu costs
-		while (Global.colorSensorSwitch) {
-			
-			//using median filter
-			for (int i = 0; i < filter.length; i++) {
-				Global.colorProvider.fetchSample(Global.colorData, 0);
-				filter[i] = Global.colorData[0];
-			}
-			Arrays.sort(filter);
-			Global.currentColor = filter[MID];
-			if (filter[MID]<Global.colorThreshhold) {
-				Global.blackLineDetected = true;
-				if (!Global.turning) {
-					switch ((int)(Global.angle+20)/90) {
-					case 0:
-						Global.X++;
-						break;
-					case 1:
-						Global.Y++;
-						break;
-					case 2:
-						Global.X--;
-						break;
-					case 3: 
-						Global.Y--;
-						break;
-					case 4:
-						Global.X++;
-						break;
-					default:
-						break;
-					}
-					try {
-						Thread.sleep(SLEEP_TIME);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+		while(true) {
+			//save some cpu costs
+			if (Global.colorSensorSwitch) {
+				
+				//using median filter
+				for (int i = 0; i < filter.length; i++) {
+					Global.colorProvider.fetchSample(Global.colorData, 0);
+					filter[i] = Global.colorData[0];
+				}
+				Arrays.sort(filter);
+				Global.currentColor = filter[MID];
+				if (filter[MID]<Global.colorThreshhold) {
+					Global.blackLineDetected = true;
+				}
+				else {
+					Global.blackLineDetected = false;
+				}
+			}else {
+				try {
+					Thread.sleep(Global.THREAD_SLEEP_TIME);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
-			else {
-				Global.blackLineDetected = false;
-			}
-			
-			
 		}
 	}
 

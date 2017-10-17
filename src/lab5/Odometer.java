@@ -13,22 +13,34 @@ public class Odometer extends Thread{
 	}
 	public void run() {
 		Global.theta=0;
-		while(Global.odometerSwitch) {
-			leftMotorTachoCount = Global.leftMotor.getTachoCount();
-			rightMotorTachoCount = Global.rightMotor.getTachoCount();
-			Global.leftMotor.resetTachoCount();
-			Global.rightMotor.resetTachoCount();
-			Global.theta += Math.toDegrees(ratio*Math.toRadians(rightMotorTachoCount-leftMotorTachoCount));
-			if (Global.theta<0) {
-				Global.theta+=360;
-			}
-			if (Global.theta>360) {
-				Global.theta-=360;
-			}
-			try {
-				Thread.sleep(SLEEP_TIME);
-			} catch (InterruptedException e) {
+		while(true) {
+			if(Global.odometerSwitch) {
+				leftMotorTachoCount = Global.leftMotor.getTachoCount();
+				rightMotorTachoCount = Global.rightMotor.getTachoCount();
+				Global.leftMotor.resetTachoCount();
+				Global.rightMotor.resetTachoCount();
+				Global.theta += Math.toDegrees(ratio*Math.toRadians(rightMotorTachoCount-leftMotorTachoCount));
+				if (Global.theta<0) {
+					Global.theta+=360;
+				}
+				if (Global.theta>360) {
+					Global.theta-=360;
+				}
+				try {
+					Thread.sleep(SLEEP_TIME);
+				} catch (InterruptedException e) {
+				}
+			}else{
+				try {
+					Global.leftMotor.resetTachoCount();
+					Global.rightMotor.resetTachoCount();
+					Thread.sleep(Global.THREAD_SLEEP_TIME);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
+		
 	}
 }

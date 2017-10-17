@@ -48,13 +48,14 @@ public class main {
 		public static final double WHEEL_RADIUS = 2.116;
 		public static final double TRACK = 10.4;
 		public static final int ROTATING_SPEED = 75;
-		public static final int MOVING_SPEED = 200;
+		public static final int MOVING_SPEED = 125;
 		public static final double ROBOT_LENGTH = 13.8;
-		public static final int COLOR_SENSOR_OFFSET_ANGLE = 17;
+		public static final int COLOR_SENSOR_OFFSET_ANGLE = 15;
 		public static final double SQUARE_LENGTH = 30.5;
-		public static final int KEEP_MOVING = Integer.MAX_VALUE;
+		public static final int KEEP_MOVING = 300;
 		public static final int STOP_MOVING = 0;
-
+		public static final int THREAD_SLEEP_TIME = 1000;
+		public static final int THREAD_SHORT_SLEEP_TIME = 200;
 		// positionnning
 		public static int X, Y = 0;
 		public static double angle = 90;
@@ -82,7 +83,7 @@ public class main {
 		// initializing us sensor
 		Global.usPort = LocalEV3.get().getPort("S1");
 		try {
-			Thread.sleep(200);
+			Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -100,92 +101,61 @@ public class main {
 		Global.usSensorThread = new UltraSonicSensor();
 		Global.colorSensorThread = new ColorSensor();
 		Global.odometer = new Odometer();
-		
-		//get a starting value for color sensor
-		Global.colorSensorSwitch = true;
-		Global.colorSensorThread.start();
 		try {
-			Thread.sleep(500);
+			Thread.sleep(Global.THREAD_SLEEP_TIME);
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
+		Global.usSensorThread.start();
+		Global.colorSensorThread.start();
+		Global.odometer.start();
+
+		// get a starting value for color sensor
+		Global.colorSensorSwitch = true;
+		try {
+			Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
+		} catch (Exception e) {
+		}
+		while(Global.currentColor==0) {
+			
+		}
 		Global.startingColor = Global.currentColor;
-		Global.colorThreshhold = Global.startingColor/2;
+		Global.colorThreshhold = Global.startingColor / 2;
+		Global.secondLine = ""+Global.startingColor;
+		Global.thirdLine = ""+Global.colorThreshhold;
 		Global.colorSensorSwitch = false;
 
-		
 		setXY();
-		
-		Navigation mainthread= new Navigation();
+
+		Navigation mainthread = new Navigation();
 		mainthread.start();
 	}
 
 	static void setXY() {
 		// goto some point
 		Global.firstLine = "Setting";
-		Global.secondLine = "x = " + Global.startingX;
-		Global.thirdLine = "y = " + Global.startingY;
 
 		while (true) {
+			Global.secondLine = "x = " + Global.startingX;
+			Global.thirdLine = "y = " + Global.startingY;
 			switch (Button.waitForAnyPress()) {
 			case Button.ID_UP:
-				Global.startingY++;
+				Global.startingY = (Global.startingY + 1) % 12;
 				break;
 			case Button.ID_DOWN:
-				Global.startingY--;
-				break;
-			case Button.ID_LEFT:
-				Global.startingX--;
+				Global.startingY = (Global.startingY - 1) % 12;
 				break;
 			case Button.ID_RIGHT:
-				Global.startingX++;
+				Global.startingX = (Global.startingX + 1) % 12;
+				break;
+			case Button.ID_LEFT:
+				Global.startingX = (Global.startingX - 1) % 12;
 				break;
 			default:
 				return;
 			}
 		}
 	}
+
 	
-	//code from early labs
-		private static int convertAngle(double radius, double width, double angle) {
-			return convertDistance(radius, Math.PI * width * angle / 360.0);
-		}
-
-		private static int convertDistance(double radius, double distance) {
-			return (int) ((180.0 * distance) / (Math.PI * radius));
-		}
-
-		public static void move(double distance, boolean immediatereturn) throws Exception {
-
-			Global.leftMotor.setSpeed(Global.MOVING_SPEED);
-			Global.rightMotor.setSpeed(Global.MOVING_SPEED);
-			if (distance<0) {
-				distance*=-1;
-				Global.leftMotor.rotate(-convertDistance(Global.WHEEL_RADIUS, distance), true);
-				Global.rightMotor.rotate(-convertDistance(Global.WHEEL_RADIUS, distance), immediatereturn);
-			}
-			else {
-				Global.leftMotor.rotate(convertDistance(Global.WHEEL_RADIUS, distance), true);
-				Global.rightMotor.rotate(convertDistance(Global.WHEEL_RADIUS, distance), immediatereturn);
-			}
-			
-			Thread.sleep(20);
-		}
-
-		public static void turn(double angle,boolean immediatereturn) throws Exception {
-			Global.turning = true;
-			Global.leftMotor.setSpeed(Global.ROTATING_SPEED);
-			Global.rightMotor.setSpeed(Global.ROTATING_SPEED);
-			if (angle>0) {
-				Global.leftMotor.rotate(convertAngle(Global.WHEEL_RADIUS, Global.TRACK, angle), true);
-				Global.rightMotor.rotate(-convertAngle(Global.WHEEL_RADIUS, Global.TRACK, angle), immediatereturn);
-			}
-			else {
-				angle*=-1;
-				Global.leftMotor.rotate(-convertAngle(Global.WHEEL_RADIUS, Global.TRACK, angle), true);
-				Global.rightMotor.rotate(convertAngle(Global.WHEEL_RADIUS, Global.TRACK, angle), immediatereturn);
-			}
-			Global.turning = false;
-			Thread.sleep(50);
-		}
 }

@@ -14,16 +14,26 @@ public class UltraSonicSensor extends Thread{
 	
 	public void run() {
 		float arr[] = new float[COUNT_MAX];
-		while (Global.usSwitch) {
-			for (int i = 0; i < COUNT_MAX; i++) {
-				Global.usDistance.fetchSample(Global.usData, 0);
-				arr[i] = Global.usData[0];
+		while(true) {
+			if (Global.usSwitch) {
+				for (int i = 0; i < COUNT_MAX; i++) {
+					Global.usDistance.fetchSample(Global.usData, 0);
+					arr[i] = Global.usData[0];
+				}
+				Arrays.sort(arr);
+				Global.ObstacleDistance = arr[MID]*100;
+				Global.secondLine = ""+Global.ObstacleDistance;
+				Global.thirdLine = ""+Global.theta;
+			}else {
+				try {
+					Thread.sleep(Global.THREAD_SLEEP_TIME);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-			Arrays.sort(arr);
-			Global.ObstacleDistance = arr[MID]*100;
-			Global.secondLine = ""+Global.ObstacleDistance;
-			Global.thirdLine = ""+Global.theta;
 		}
+		
 	}
 	
 	
