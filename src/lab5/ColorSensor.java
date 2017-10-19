@@ -17,25 +17,15 @@ public class ColorSensor extends Thread {
 	@Override
 	public void run() {
 		
-		float filter[] = new float[COUNT_MAX];
-		
 		while(true) {
 			//save some cpu costs
 			if (Global.colorSensorSwitch) {
 				
-				//using median filter
-				for (int i = 0; i < filter.length; i++) {
-					Global.colorProvider.fetchSample(Global.colorData, 0);
-					filter[i] = Global.colorData[0];
-				}
-				Arrays.sort(filter);
-				Global.currentColor = filter[MID];
-				if (filter[MID]<Global.colorThreshhold) {
-					Global.blackLineDetected = true;
-				}
-				else {
-					Global.blackLineDetected = false;
-				}
+				Global.leftColorProvider.fetchSample(Global.leftColorData, 0);
+				Global.rightColorProvider.fetchSample(Global.rightColorData, 0);
+				Global.forthLine = Global.leftColorData[0]+"";
+				Global.fifthLine = Global.rightColorData[0]+"";
+				
 			}else {
 				try {
 					Thread.sleep(Global.THREAD_SLEEP_TIME);
