@@ -8,6 +8,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
+import lejos.robotics.filter.PublishedSource;
 
 public class main {
 
@@ -34,20 +35,21 @@ public class main {
 
 		// light sensor
 		public static ColorSensor colorSensorThread;
-		public static float colorThreshhold = 0;
-		public static boolean rightBlackLineDetected = false;
-		public static boolean leftBlackLineDetected = false;
+		
 		
 		public static Port leftColorSensorPort;
 		public static EV3ColorSensor leftColorSensor;
 		public static float[] leftColorData;
 		public static SampleProvider leftColorProvider;
 		public static float leftColor = 0;
-		public static Port rightColorSensorPort;
-		public static EV3ColorSensor rightColorSensor;
-		public static float[] rightColorData;
-		public static SampleProvider rightColorProvider;
-		public static float rightColor = 0;
+		public static float colorThreshhold = 0;
+		public static boolean BlackLineDetected = false;
+		
+		public static Port frontColorSensorPort;
+		public static EV3ColorSensor frontColorSensor;
+		public static float[] frontColorData;
+		public static SampleProvider frontColorProvider;
+		public static float frontColor = 0;
 		
 		
 		// odometer
@@ -66,6 +68,7 @@ public class main {
 		public static final int STOP_MOVING = 0;
 		public static final int THREAD_SLEEP_TIME = 1000;
 		public static final int THREAD_SHORT_SLEEP_TIME = 200;
+		public static final int ZIPLINE_LENGTH = 120;
 		
 		// positionnning
 		public static int X, Y = 0;
@@ -80,6 +83,7 @@ public class main {
 
 		// variable for this lab
 		public static int startingX = 0, startingY = 0;
+		public static int zipLineX = 0, zipLineY = 0;
 	}
 
 	public static void main(String[] args) {
@@ -101,16 +105,16 @@ public class main {
 		Global.usDistance = Global.usSensor.getMode("Distance");
 		Global.usData = new float[Global.usDistance.sampleSize()];
 
-		// initializing light sensor
+		// initializing light sensors
 		Global.leftColorSensorPort = LocalEV3.get().getPort("S2");
 		Global.leftColorSensor = new EV3ColorSensor(Global.leftColorSensorPort);
 		Global.leftColorProvider = Global.leftColorSensor.getRedMode();
 		Global.leftColorData = new float[Global.leftColorProvider.sampleSize() + 1];
 
-		Global.rightColorSensorPort = LocalEV3.get().getPort("S2");
-		Global.rightColorSensor = new EV3ColorSensor(Global.rightColorSensorPort);
-		Global.rightColorProvider = Global.rightColorSensor.getRedMode();
-		Global.rightColorData = new float[Global.rightColorProvider.sampleSize() + 1];
+		Global.frontColorSensorPort = LocalEV3.get().getPort("S3");
+		Global.frontColorSensor = new EV3ColorSensor(Global.frontColorSensorPort);
+		Global.frontColorProvider = Global.frontColorSensor.getRGBMode();
+		Global.frontColorData = new float[Global.frontColorProvider.sampleSize() + 1];
 		
 		// initializing threads
 		Global.usSensorThread = new UltraSonicSensor();
@@ -131,38 +135,71 @@ public class main {
 			Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 		} catch (Exception e) {
 		}
-		while(Global.rightColor==0) {
+		while(Global.leftColor==0) {
 			
 		}
-		Global.colorThreshhold = Global.rightColor / 2;
+		Global.colorThreshhold = Global.leftColor / 2;
 		Global.thirdLine = ""+Global.colorThreshhold;
 		Global.colorSensorSwitch = false;
 
-		setXY();
-
+		setStartingXY();
+		setZiplineXY();
+		
 		Navigation mainthread = new Navigation();
 		mainthread.start();
 	}
 
-	static void setXY() {
+	static void setStartingXY() {
 		// goto some point
-		Global.firstLine = "Setting";
+		Global.firstLine = "Set starting XY";
 
 		while (true) {
 			Global.secondLine = "x = " + Global.startingX;
 			Global.thirdLine = "y = " + Global.startingY;
 			switch (Button.waitForAnyPress()) {
 			case Button.ID_UP:
-				Global.startingY = (Global.startingY + 1) % 12;
+				Global.startingY++;
+				Global.startingY%=12;
 				break;
 			case Button.ID_DOWN:
-				Global.startingY = (Global.startingY - 1) % 12;
+				Global.startingY--;
+				Global.startingY%=12;
 				break;
 			case Button.ID_RIGHT:
-				Global.startingX = (Global.startingX + 1) % 12;
+				Global.startingX++;
+				Global.startingX%=12;
 				break;
 			case Button.ID_LEFT:
-				Global.startingX = (Global.startingX - 1) % 12;
+				Global.startingX--;
+				Global.startingX%=12;
+				break;
+			default:
+				return;
+			}
+		}
+	}
+	static void setZiplineXY() {
+		Global.firstLine = "Set zipline XY";
+
+		while (true) {
+			Global.secondLine = "x = " + Global.startingX;
+			Global.thirdLine = "y = " + Global.startingY;
+			switch (Button.waitForAnyPress()) {
+			case Button.ID_UP:
+				Global.zipLineY++;
+				Global.zipLineY%=12;
+				break;
+			case Button.ID_DOWN:
+				Global.zipLineY--;
+				Global.zipLineY%=12;
+				break;
+			case Button.ID_RIGHT:
+				Global.zipLineX++;
+				Global.zipLineX%=12;
+				break;
+			case Button.ID_LEFT:
+				Global.zipLineX--;
+				Global.zipLineX%=12;
 				break;
 			default:
 				return;

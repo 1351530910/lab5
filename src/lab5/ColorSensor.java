@@ -22,9 +22,9 @@ public class ColorSensor extends Thread {
 			if (Global.colorSensorSwitch) {
 				
 				Global.leftColorProvider.fetchSample(Global.leftColorData, 0);
-				Global.rightColorProvider.fetchSample(Global.rightColorData, 0);
+				Global.frontColorProvider.fetchSample(Global.frontColorData, 0);
 				Global.forthLine = Global.leftColorData[0]+"";
-				Global.fifthLine = Global.rightColorData[0]+"";
+				Global.fifthLine = Global.frontColorData[0]+" "+Global.frontColorData[1]+" "+Global.frontColorData[2]+" ";
 				
 			}else {
 				try {

@@ -4,6 +4,9 @@ import lab5.main.Global;
 import lejos.hardware.Button;
 
 public class Navigation extends Thread {
+	
+	double angle  = 0;
+	
 	public Navigation() {
 
 	}
@@ -13,11 +16,11 @@ public class Navigation extends Thread {
 			Global.firstLine = "navigating";
 			FallingEdge();
 			lightPosition();
-
 			Global.firstLine = "localization finished";
 			Button.waitForAnyPress();
 			travelTo(Global.startingX, Global.startingY);
-
+			
+			travelZipLine();	
 			
 			zipLineCorrection();
 		} catch (Exception e) {
@@ -26,19 +29,27 @@ public class Navigation extends Thread {
 	}
 	
 	public void travelZipLine() throws Exception{
-		
+		if (Global.startingX==Global.zipLineX) {
+			if (Global.startingY>Global.zipLineY) {
+				turn(90, false);
+			}else{
+				turn(270, false);
+			}
+		}else {
+			if (Global.startingX>Global.zipLineX) {
+				turn(180, false);
+			}
+		}
+		move(Global.ZIPLINE_LENGTH, false);
 	}
 
 	public void zipLineCorrection() throws Exception{
 		
 		Global.colorSensorSwitch = true;
-		Global.secondLine = "light positionning";
-		Thread.sleep(Global.THREAD_SLEEP_TIME); // wait color sensor to get its values
 
-		// reset one coordinate
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
-		while (!Global.leftBlackLineDetected) {
+		while (!Global.BlackLineDetected) {
 
 		}
 		// move back to black line
@@ -46,35 +57,16 @@ public class Navigation extends Thread {
 		Thread.sleep(250);
 
 		// reset angle
-		// turn until color sensor sees a black line then turn to 90 degree
+		// turn until color sensor sees a black line
 		turn(Global.KEEP_MOVING, true);
-		while (!Global.rightBlackLineDetected) {
+		while (!Global.BlackLineDetected) {
 
 		}
-		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
+		
+		//face 0 degree
+		turn(90-Global.COLOR_SENSOR_OFFSET_ANGLE, false);
 
-		// reset Y
-		// move until sensor sees black line
-		move(Global.KEEP_MOVING, true);
-		while (!Global.rightBlackLineDetected) {
-
-		}
-		// move back to black line
-		move(0 - Global.ROBOT_LENGTH, false);
-		Thread.sleep(250);
-
-		turn(-90, false);
-
-		// turn off color sensor
-		Global.colorSensorSwitch = false;
-
-		// wait color sensor is turned off
-		Thread.sleep(200);
-
-		// reset coordinates
-		Global.angle = 0;
-		Global.X = -1;
-		Global.Y = -1;
+		
 	}
 
 	
@@ -94,7 +86,7 @@ public class Navigation extends Thread {
 			if (x > Global.X) {
 				move(Global.KEEP_MOVING, true);
 				while (Global.X != x) {
-					if (Global.leftBlackLineDetected) {
+					if (Global.BlackLineDetected) {
 						Global.X++;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
@@ -102,7 +94,7 @@ public class Navigation extends Thread {
 			} else {
 				move(-Global.KEEP_MOVING, true);
 				while (Global.X != x) {
-					if (Global.leftBlackLineDetected) {
+					if (Global.BlackLineDetected) {
 						Global.X--;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
@@ -117,7 +109,7 @@ public class Navigation extends Thread {
 			if (y > Global.Y) {
 				move(Global.KEEP_MOVING, true);
 				while (Global.Y != y) {
-					if (Global.leftBlackLineDetected) {
+					if (Global.BlackLineDetected) {
 						Global.Y++;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
@@ -125,7 +117,7 @@ public class Navigation extends Thread {
 			} else {
 				move(-Global.KEEP_MOVING, true);
 				while (Global.Y != y) {
-					if (Global.leftBlackLineDetected) {
+					if (Global.BlackLineDetected) {
 						Global.Y--;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
@@ -133,6 +125,8 @@ public class Navigation extends Thread {
 			}
 		}
 		move(-Global.ROBOT_LENGTH, false);
+		turn(90, false);
+		
 	}
 
 	public void FallingEdge() throws Exception {
@@ -194,7 +188,7 @@ public class Navigation extends Thread {
 		// reset X
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
-		while (!Global.rightBlackLineDetected) {
+		while (!Global.BlackLineDetected) {
 
 		}
 		// move back to black line
@@ -204,15 +198,15 @@ public class Navigation extends Thread {
 		// reset angle
 		// turn until color sensor sees a black line then turn to 90 degree
 		turn(0 - Global.KEEP_MOVING, true);
-		while (!Global.rightBlackLineDetected) {
+		while (!Global.BlackLineDetected) {
 
 		}
-		turn(-Global.COLOR_SENSOR_OFFSET_ANGLE, false);
+		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
 
 		// reset Y
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
-		while (!Global.rightBlackLineDetected) {
+		while (!Global.BlackLineDetected) {
 
 		}
 		// move back to black line
