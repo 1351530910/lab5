@@ -8,21 +8,22 @@ public class Navigation extends Thread {
 	double angle  = 0;
 	
 	public Navigation() {
-
 	}
 
 	public void run() {
 		try {
-			Global.firstLine = "navigating";
+			// Positionning
 			FallingEdge();
 			lightPosition();
-			Global.firstLine = "localization finished";
 			Button.waitForAnyPress();
+			
+			// Travel to X0, Y0
 			travelTo(Global.startingX, Global.startingY);
 			
+			// Cross the zipline
 			travelZipLine();	
-			
 			zipLineCorrection();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -68,8 +69,6 @@ public class Navigation extends Thread {
 
 		
 	}
-
-	
 
 	public void travelTo(int x, int y) throws Exception {
 		// start requiring threads
@@ -177,6 +176,8 @@ public class Navigation extends Thread {
 		// turn off ussensor and odometer
 		Global.usSwitch = false;
 		Global.odometerSwitch = false;
+		Global.secondLine = "";
+		Global.thirdLine = "";
 	}
 
 	public void lightPosition() throws Exception {
@@ -213,7 +214,9 @@ public class Navigation extends Thread {
 		move(0 - Global.ROBOT_LENGTH, false);
 		Thread.sleep(250);
 
-		turn(90, false);
+		turn(Global.KEEP_MOVING, true);
+		while (!Global.BlackLineDetected) {}
+		turn(Global.COLOR_SENSOR_OFFSET_ANGLE_SMALL, false);
 
 		// turn off color sensor
 		Global.colorSensorSwitch = false;
@@ -221,10 +224,12 @@ public class Navigation extends Thread {
 		// wait color sensor is turned off
 		Thread.sleep(200);
 
-		// reset coordinates
+		// rjeset coordinates
 		Global.angle = 0;
 		Global.X = -1;
 		Global.Y = -1;
+		
+		Global.secondLine = "";
 	}
 
 	private int convertAngle(double radius, double width, double angle) {
