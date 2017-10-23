@@ -6,6 +6,7 @@ public class frontColorSensor extends Thread {
 
 	public frontColorSensor() {}
 	
+	/*
 	@Override
 	public void run() {
 		
@@ -25,5 +26,5 @@ public class frontColorSensor extends Thread {
 			}
 		}
 	}
-
+*/
 }

@@ -13,7 +13,7 @@ public class main {
 
 	public static class Global {// a class that contains some global variables
 		
-		public static int SC = 0;
+		public static int SC = 1;
 		
 		// switches
 		public static boolean colorSensorSwitch = false;
@@ -57,17 +57,14 @@ public class main {
 		public static float B = 0;
 		*/
 		
-		// odometer
-		public static Odometer odometer;
-		public static double theta = 0;//difference of theta when odometer started and the current angle
 
 		// constants
-		public static final int ACCELERATION = 500;
+		public static final int ACCELERATION = 100;
 		public static final double WHEEL_RADIUS = 2.116;
 		public static final double TRACK = 10.2;
-		public static final int ROTATING_SPEED = 75;
-		public static final int MOVING_SPEED = 120;
-		public static final double ROBOT_LENGTH = 10;
+		public static final int ROTATING_SPEED = 90;
+		public static final int MOVING_SPEED = 150;
+		public static final double ROBOT_LENGTH = 10.1;
 		public static final int COLOR_SENSOR_OFFSET_ANGLE = 25;
 		public static final int COLOR_SENSOR_OFFSET_ANGLE_WITH_BLACKBAND = 35;
 		public static final double SQUARE_LENGTH = 30.5;
@@ -149,6 +146,7 @@ public class main {
 
 		setStartingXY();
 		setZiplineXY();
+		setSC();
 		
 		Global.rightMotor.setAcceleration(Global.ACCELERATION);
 		Global.leftMotor.setAcceleration(Global.ACCELERATION);
@@ -190,8 +188,8 @@ public class main {
 		Global.firstLine = "Set zipline XY";
 
 		while (true) {
-			Global.secondLine = "x = " + Global.startingX;
-			Global.thirdLine = "y = " + Global.startingY;
+			Global.secondLine = "x = " + Global.zipLineX;
+			Global.thirdLine = "y = " + Global.zipLineY;
 			switch (Button.waitForAnyPress()) {
 			case Button.ID_UP:
 				Global.zipLineY++;
@@ -208,6 +206,29 @@ public class main {
 			case Button.ID_LEFT:
 				Global.zipLineX--;
 				Global.zipLineX%=12;
+				break;
+			default:
+				return;
+			}
+		}
+	}
+	static void setSC() {
+		Global.firstLine = "Set zipline XY";
+
+		while (true) {
+			Global.secondLine = "SC = " + Global.SC;
+			switch (Button.waitForAnyPress()) {
+			case Button.ID_UP:
+				Global.SC=0;
+				break;
+			case Button.ID_DOWN:
+				Global.SC=1;
+				break;
+			case Button.ID_RIGHT:
+				Global.SC=2;
+				break;
+			case Button.ID_LEFT:
+				Global.SC=3;
 				break;
 			default:
 				return;

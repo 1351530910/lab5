@@ -102,29 +102,35 @@ public class Navigation extends Thread {
 		// start requiring threads
 		Global.colorSensorSwitch = true;
 		Global.secondLine = "travel to " + x + "," + y;
+		Global.thirdLine = "current: "+Global.X+"_"+Global.Y;
 		Thread.sleep(Global.THREAD_SLEEP_TIME);
 		
 		//because our color sensor is behind the robot
 		
 		
 		// move across x
+		Global.thirdLine = "travel x";
 		if (x != Global.X) {// verify if moving in x is needed
 
 			if (x > Global.X) {
+				Global.X--;//because our color sensor is behind
 				move(Global.KEEP_MOVING, true);
-				while (Global.X != x) {
+				while (Global.X <= x) {
+					Global.forthLine = ""+Global.X;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
 						Global.X++;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
+					
 				}
+				Global.X--;
 				move(-Global.ROBOT_LENGTH, false);
 			} 
 			else {
-				x-=1;//because our color sensor is behind
 				move(-Global.KEEP_MOVING, true);
-				while (Global.X != x) {
+				while (Global.X > x) {
+					Global.forthLine = ""+Global.X;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
 						Global.X--;
@@ -142,23 +148,26 @@ public class Navigation extends Thread {
 
 		}
 		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
-		
+		Thread.sleep(Global.THREAD_SLEEP_TIME);
+		Global.thirdLine = "travel y;";
+		Global.forthLine = ""+Global.Y;
 		// move across y
 		if (y != Global.Y) {
 			if (y > Global.Y) {
 				move(Global.KEEP_MOVING, true);
-				while (Global.Y != y) {
+				while (Global.Y <= y) {
+					Global.forthLine = ""+Global.Y;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
 						Global.Y++;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
+				Global.Y--;
 			} else {
 				move(-Global.KEEP_MOVING, true);
-				y-=1;
-				while (Global.Y != y) {
-					
+				while (Global.Y > y) {
+					Global.forthLine = ""+Global.Y;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
 						Global.Y--;
