@@ -1,5 +1,7 @@
 package lab5;
 
+import java.util.Timer;
+
 import lab5.main.Global;
 import lejos.hardware.Button;
 
@@ -12,6 +14,8 @@ public class Navigation extends Thread {
 	public void run() {
 		try {
 			Global.firstLine = "navigating";
+			reposition();
+			Thread.sleep(100000);
 			FallingEdge();
 			lightPosition();
 			checkSC();
@@ -22,6 +26,30 @@ public class Navigation extends Thread {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	public void reposition() throws Exception{
+		Global.colorSensorSwitch = true;
+		Thread.sleep(Global.THREAD_SLEEP_TIME);
+		double lefttime = 0;
+		double righttime = 0;
+		move(Global.SQUARE_LENGTH, true);
+		while (lefttime==0||righttime==0) {
+			if (Global.BlackLineDetected) {
+				lefttime = System.currentTimeMillis();
+				Global.forthLine = ""+lefttime;
+			}
+			if(Global.rightBlackLineDetected) {
+				righttime = System.currentTimeMillis();
+				Global.fifthLine = ""+righttime;
+			}
+			
+		}
+		double diff = righttime-lefttime;
+		double angle = diff*Global.ratio;
+		
+		turn(angle, false);
+		Global.colorSensorSwitch = false;
+		
 	}
 	public void checkSC() throws Exception{
 		switch (Global.SC) {
@@ -81,7 +109,7 @@ public class Navigation extends Thread {
 
 			}
 			// move back to black line
-			move(-Global.ROBOT_LENGTH, false);
+			move(-Global.ROBOT_LENGTH+1.5, false);
 			Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 			// reset angle
 			// turn until color sensor sees a black line
@@ -124,7 +152,6 @@ public class Navigation extends Thread {
 					}
 					
 				}
-				Global.X--;
 				move(-Global.ROBOT_LENGTH, false);
 			} 
 			else {
@@ -147,12 +174,15 @@ public class Navigation extends Thread {
 		while (!Global.BlackLineDetected) {
 
 		}
-		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
-		Thread.sleep(Global.THREAD_SLEEP_TIME);
+		turn(Global.COLOR_SENSOR_OFFSET_ANGLE-2, false);
 		Global.thirdLine = "travel y;";
 		Global.forthLine = ""+Global.Y;
+		
 		// move across y
 		if (y != Global.Y) {
+			while(Global.leftMotor.isMoving()) {
+				
+			}
 			if (y > Global.Y) {
 				move(Global.KEEP_MOVING, true);
 				while (Global.Y <= y) {
@@ -163,7 +193,6 @@ public class Navigation extends Thread {
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
-				Global.Y--;
 			} else {
 				move(-Global.KEEP_MOVING, true);
 				while (Global.Y > y) {
@@ -176,6 +205,8 @@ public class Navigation extends Thread {
 				}
 			}
 		}
+		Global.X = x;
+		Global.Y = y;
 		move(-Global.ROBOT_LENGTH, false);
 		// turn and rescan the angle
 		turn(90, false);
@@ -183,27 +214,61 @@ public class Navigation extends Thread {
 		
 	}
 
-	public void FallingEdge() throws Exception {
-		final int threshhold = 50;
-		// start the corresponding sensor thread
+	public void FallingEdge() throws Exception{
+		Global.rightMotor.setAcceleration(3000);
+		Global.leftMotor.setAcceleration(3000);
+		//start the corresponding sensor thread
+		Global.odometerSwitch = true;
 		Global.usSwitch = true;
-		Global.secondLine = "falling edge";
+		Global.odometerThread = new Odometer();
+		Global.usSensorThread = new UltraSonicSensor();
 		Thread.sleep(Global.THREAD_SLEEP_TIME);
+		Global.usSensorThread.start();
+		Global.odometerThread.start();
+		Thread.sleep(Global.THREAD_SLEEP_TIME);
+				
 		
-		//wait for collecting some data and make sure there is no wall in front
-		turn(20, false);
-		while (Global.ObstacleDistance < threshhold) {
-			turn(90, false);
+		int Angle = 0;
+		
+		//make sure there is no wall in front
+		while (Global.ObstacleDistance<Global.USThreshhold) {
+			turn(90,false);
 		}
-
-		// make the robot face a wall
+		
+		//make the robot face a wall
 		turn(Global.KEEP_MOVING, true);
-		while (Global.ObstacleDistance > threshhold) {
+		while(Global.ObstacleDistance>Global.USThreshhold) {
 		}
 		turn(Global.STOP_MOVING, false);
+		
+		//set this angle as starting angle
+		for (int i = 0; i < 5; i++) {
+			Global.theta=0;
+		}
+		
+		//redo same thing for other side
+		turn(-90, false);
+		turn(-Global.KEEP_MOVING, true);
+		while(Global.ObstacleDistance>Global.USThreshhold) {
+		}
+		turn(Global.STOP_MOVING, false);
+		
+		//read angle and make it positive
+		Angle = (int)Global.theta;
+		
+		//divide by 2 and add 45
+		if (Angle>360) {//small correction to make sure it make no big cercles
+			Angle-=360;
+		}
+		Angle = Angle>>1;
+		Angle+=45;
 
-		turn(Global.FALLING_EDGE_ANGLE, false);
+		
+		turn(Angle, false);
+		Global.odometerSwitch = false;
 		Global.usSwitch = false;
+		Global.rightMotor.setAcceleration(Global.ACCELERATION);
+		Global.leftMotor.setAcceleration(Global.ACCELERATION);
 	}
 
 	public void lightPosition() throws Exception {
@@ -251,6 +316,7 @@ public class Navigation extends Thread {
 		// reset coordinates
 		Global.angle = 0;
 	}
+	
 
 	private int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);

@@ -19,6 +19,7 @@ public class main {
 		public static boolean colorSensorSwitch = false;
 		public static boolean usSwitch = false;
 		public static boolean frontColorSensorSwitch = false;
+		public static boolean odometerSwitch = false;
 		public static boolean turning = false;
 		
 		// motors
@@ -26,7 +27,9 @@ public class main {
 		public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 		public static final EV3LargeRegulatedMotor ziplineMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
 		
-
+		//odometer
+		public static Odometer odometerThread;
+		public static float theta = 0;
 		// ussensors
 		public static UltraSonicSensor usSensorThread;
 		public static Port usPort;
@@ -45,6 +48,14 @@ public class main {
 		public static float colorThreshhold = 0;
 		public static boolean BlackLineDetected = false;
 		
+		public static rightColorSensor rightcolorSensorThread;
+		public static Port rightColorSensorPort;
+		public static EV3ColorSensor rightColorSensor;
+		public static float[] rightColorData;
+		public static SampleProvider rightColorProvider;
+		public static float rightColor = 0;
+		public static boolean rightBlackLineDetected = false;
+		
 		/*
 		public static frontColorSensor frontColorSensorThread;
 		public static Port frontColorSensorPort;
@@ -61,19 +72,21 @@ public class main {
 		// constants
 		public static final int ACCELERATION = 100;
 		public static final double WHEEL_RADIUS = 2.116;
-		public static final double TRACK = 10.2;
+		public static final double TRACK = 9.95;
 		public static final int ROTATING_SPEED = 90;
 		public static final int MOVING_SPEED = 150;
-		public static final double ROBOT_LENGTH = 10.1;
-		public static final int COLOR_SENSOR_OFFSET_ANGLE = 25;
-		public static final int COLOR_SENSOR_OFFSET_ANGLE_WITH_BLACKBAND = 35;
+		public static final double ROBOT_LENGTH = 10.5;
+		public static final int COLOR_SENSOR_OFFSET_ANGLE = 27;
+		public static final int COLOR_SENSOR_OFFSET_ANGLE_WITH_BLACKBAND = 31;
 		public static final double SQUARE_LENGTH = 30.5;
-		public static final int KEEP_MOVING = 300;
+		public static final int KEEP_MOVING = 3000;
 		public static final int STOP_MOVING = 0;
 		public static final int THREAD_SLEEP_TIME = 1500;
 		public static final int THREAD_SHORT_SLEEP_TIME = 10;
 		public static final int ZIPLINE_LENGTH = 250;
 		public static final int FALLING_EDGE_ANGLE = -65;
+		public static final int USThreshhold = 40;
+		public static final int ratio = 0;
 		
 		// positionnning
 		public static int X, Y = 0;
@@ -113,16 +126,17 @@ public class main {
 		Global.leftColorProvider = Global.leftColorSensor.getRedMode();
 		Global.leftColorData = new float[Global.leftColorProvider.sampleSize() + 1];
 
-		/*
-		Global.frontColorSensorPort = LocalEV3.get().getPort("S3");
-		Global.frontColorSensor = new EV3ColorSensor(Global.frontColorSensorPort);
-		Global.frontColorProvider = Global.frontColorSensor.getRGBMode();
-		Global.frontColorData = new float[Global.frontColorProvider.sampleSize() + 1];
-		*/
+		
+		Global.rightColorSensorPort = LocalEV3.get().getPort("S3");
+		Global.rightColorSensor = new EV3ColorSensor(Global.rightColorSensorPort);
+		Global.rightColorProvider = Global.rightColorSensor.getRedMode();
+		Global.rightColorData = new float[Global.rightColorProvider.sampleSize() + 1];
+		
 		
 		// initializing threads
 		Global.usSensorThread = new UltraSonicSensor();
 		Global.colorSensorThread = new ColorSensor();
+		Global.rightcolorSensorThread = new rightColorSensor();
 		//Global.frontColorSensorThread = new frontColorSensor();
 		
 		try {
@@ -130,8 +144,8 @@ public class main {
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		Global.usSensorThread.start();
 		Global.colorSensorThread.start();
+		Global.rightcolorSensorThread.start();
 		//Global.frontColorSensorThread.start();
 
 		// get a starting value for color sensor
