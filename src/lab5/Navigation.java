@@ -4,81 +4,109 @@ import lab5.main.Global;
 import lejos.hardware.Button;
 
 public class Navigation extends Thread {
-	
-	double angle  = 0;
-	
+
 	public Navigation() {
+
 	}
 
 	public void run() {
 		try {
-			// Positionning
+			Global.firstLine = "navigating";
 			FallingEdge();
 			lightPosition();
-			Button.waitForAnyPress();
-			
-			// Travel to X0, Y0
+			checkSC();
 			travelTo(Global.startingX, Global.startingY);
-			
-			// Cross the zipline
-			travelZipLine();	
+			travelZipLine();
 			zipLineCorrection();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public void travelZipLine() throws Exception{
-		if (Global.startingX==Global.zipLineX) {
-			if (Global.startingY>Global.zipLineY) {
+	public void checkSC() throws Exception{
+		switch (Global.SC) {
+		case 0:
+			turn(-90, false);
+			Global.X = 1;
+			Global.Y = 7;
+			return;
+		case 1:
+			Global.X = 1;
+			Global.Y = 1;
+			return;
+		case 2:
+			turn(90, false);
+			Global.X = 7;
+			Global.Y = 1;
+			return;
+		case 3:
+			turn(180, false);
+			Global.X = 7;
+			Global.Y = 7;
+			return;
+
+		default:
+			break;
+		}
+	}
+	public void travelZipLine() throws Exception {
+		Global.ziplineMotor.setSpeed(Global.MOVING_SPEED);
+		Global.ziplineMotor.backward();
+		if (Global.startingX == Global.zipLineX) {
+			if (Global.startingY > Global.zipLineY) {
+				turn(-90, false);
+			} else {
 				turn(90, false);
-			}else{
-				turn(270, false);
 			}
-		}else {
-			if (Global.startingX>Global.zipLineX) {
+		} else {
+			if (Global.startingX > Global.zipLineX) {
 				turn(180, false);
 			}
 		}
 		move(Global.ZIPLINE_LENGTH, false);
+		Global.ziplineMotor.stop();
 	}
 
-	public void zipLineCorrection() throws Exception{
-		
+	public void zipLineCorrection() throws Exception {
+
 		Global.colorSensorSwitch = true;
+		Thread.sleep(Global.THREAD_SLEEP_TIME);
+		
+		//depending on how much time we have we might change the loop
+		for (int i = 0; i < 3; i++) {
+			// move until sensor sees black line
+			move(Global.KEEP_MOVING, true);
+			Global.BlackLineDetected = false;
+			while (!Global.BlackLineDetected) {
 
-		// move until sensor sees black line
-		move(Global.KEEP_MOVING, true);
-		while (!Global.BlackLineDetected) {
+			}
+			// move back to black line
+			move(-Global.ROBOT_LENGTH, false);
+			Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
+			// reset angle
+			// turn until color sensor sees a black line
+			turn(Global.KEEP_MOVING, true);
+			Global.BlackLineDetected = false;
+			while (!Global.BlackLineDetected) {
 
-		}
-		// move back to black line
-		move(0 - Global.ROBOT_LENGTH, false);
-		Thread.sleep(250);
+			}
 
-		// reset angle
-		// turn until color sensor sees a black line
-		turn(Global.KEEP_MOVING, true);
-		while (!Global.BlackLineDetected) {
-
+			// face 0 degree
+			turn(Global.COLOR_SENSOR_OFFSET_ANGLE-90, false);
 		}
 		
-		//face 0 degree
-		turn(90-Global.COLOR_SENSOR_OFFSET_ANGLE, false);
-
-		
+		Global.colorSensorSwitch = false;
 	}
 
 	public void travelTo(int x, int y) throws Exception {
 		// start requiring threads
 		Global.colorSensorSwitch = true;
-		Global.odometerSwitch = true;
 		Global.secondLine = "travel to " + x + "," + y;
 		Thread.sleep(Global.THREAD_SLEEP_TIME);
-
-		double angle = 0;
-
+		
+		//because our color sensor is behind the robot
+		
+		
 		// move across x
 		if (x != Global.X) {// verify if moving in x is needed
 
@@ -86,37 +114,53 @@ public class Navigation extends Thread {
 				move(Global.KEEP_MOVING, true);
 				while (Global.X != x) {
 					if (Global.BlackLineDetected) {
+						Global.BlackLineDetected = false;
 						Global.X++;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
-			} else {
+				move(-Global.ROBOT_LENGTH, false);
+			} 
+			else {
+				x-=1;//because our color sensor is behind
 				move(-Global.KEEP_MOVING, true);
 				while (Global.X != x) {
 					if (Global.BlackLineDetected) {
+						Global.BlackLineDetected = false;
 						Global.X--;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
+				move(-Global.ROBOT_LENGTH, false);
 			}
-
-			move(Global.STOP_MOVING, false);
 		}
-		move(-Global.ROBOT_LENGTH, false);
-		turn(-90, false);
+
+		turn(-Global.KEEP_MOVING, true);
+		Thread.sleep(Global.THREAD_SLEEP_TIME);
+		Global.BlackLineDetected = false;
+		while (!Global.BlackLineDetected) {
+
+		}
+		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
+		
+		// move across y
 		if (y != Global.Y) {
 			if (y > Global.Y) {
 				move(Global.KEEP_MOVING, true);
 				while (Global.Y != y) {
 					if (Global.BlackLineDetected) {
+						Global.BlackLineDetected = false;
 						Global.Y++;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
 			} else {
 				move(-Global.KEEP_MOVING, true);
+				y-=1;
 				while (Global.Y != y) {
+					
 					if (Global.BlackLineDetected) {
+						Global.BlackLineDetected = false;
 						Global.Y--;
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
@@ -124,7 +168,9 @@ public class Navigation extends Thread {
 			}
 		}
 		move(-Global.ROBOT_LENGTH, false);
+		// turn and rescan the angle
 		turn(90, false);
+		Global.colorSensorSwitch = false;
 		
 	}
 
@@ -132,13 +178,11 @@ public class Navigation extends Thread {
 		final int threshhold = 50;
 		// start the corresponding sensor thread
 		Global.usSwitch = true;
-		Global.odometerSwitch = true;
 		Global.secondLine = "falling edge";
 		Thread.sleep(Global.THREAD_SLEEP_TIME);
-
-		int Angle = 0;
-
-		// make sure there is no wall in front
+		
+		//wait for collecting some data and make sure there is no wall in front
+		turn(20, false);
 		while (Global.ObstacleDistance < threshhold) {
 			turn(90, false);
 		}
@@ -149,35 +193,8 @@ public class Navigation extends Thread {
 		}
 		turn(Global.STOP_MOVING, false);
 
-		// set this angle as starting angle
-		for (int i = 0; i < 5; i++) {
-			Global.theta = 0;
-		}
-
-		// redo same thing for other side
-		turn(-90, false);
-		turn(0 - Global.KEEP_MOVING, true);
-		while (Global.ObstacleDistance > 50) {
-		}
-		turn(Global.STOP_MOVING, false);
-
-		// read angle and make it positive
-		Angle = (int) Global.theta;
-
-		// divide by 2 and add 45
-		if (Angle > 360) {// small correction to make sure it make no big cercles
-			Angle -= 360;
-		}
-		Angle = Angle >> 1;
-		Angle += 45;
-
-		turn(Angle, false);
-
-		// turn off ussensor and odometer
+		turn(Global.FALLING_EDGE_ANGLE, false);
 		Global.usSwitch = false;
-		Global.odometerSwitch = false;
-		Global.secondLine = "";
-		Global.thirdLine = "";
 	}
 
 	public void lightPosition() throws Exception {
@@ -189,34 +206,31 @@ public class Navigation extends Thread {
 		// reset X
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
+		Global.BlackLineDetected = false;
 		while (!Global.BlackLineDetected) {
-
 		}
+		
 		// move back to black line
-		move(0 - Global.ROBOT_LENGTH, false);
+		move(-Global.ROBOT_LENGTH, false);
 		Thread.sleep(250);
 
 		// reset angle
 		// turn until color sensor sees a black line then turn to 90 degree
-		turn(0 - Global.KEEP_MOVING, true);
+		turn(-Global.KEEP_MOVING, true);
 		while (!Global.BlackLineDetected) {
-
 		}
 		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
 
 		// reset Y
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
+		Global.BlackLineDetected = false;
 		while (!Global.BlackLineDetected) {
-
 		}
+		
 		// move back to black line
-		move(0 - Global.ROBOT_LENGTH, false);
+		move(-Global.ROBOT_LENGTH, false);
 		Thread.sleep(250);
-
-		turn(Global.KEEP_MOVING, true);
-		while (!Global.BlackLineDetected) {}
-		turn(Global.COLOR_SENSOR_OFFSET_ANGLE_SMALL, false);
 
 		// turn off color sensor
 		Global.colorSensorSwitch = false;
@@ -224,12 +238,9 @@ public class Navigation extends Thread {
 		// wait color sensor is turned off
 		Thread.sleep(200);
 
-		// rjeset coordinates
+		turn(90, false);
+		// reset coordinates
 		Global.angle = 0;
-		Global.X = -1;
-		Global.Y = -1;
-		
-		Global.secondLine = "";
 	}
 
 	private int convertAngle(double radius, double width, double angle) {
@@ -252,6 +263,7 @@ public class Navigation extends Thread {
 	}
 
 	public void turn(double angle, boolean immediatereturn) throws Exception {
+		// clockwise positive
 		Global.turning = true;
 		Global.leftMotor.setSpeed(Global.ROTATING_SPEED);
 		Global.rightMotor.setSpeed(Global.ROTATING_SPEED);
