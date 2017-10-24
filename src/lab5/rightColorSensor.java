@@ -4,6 +4,7 @@ import lab5.main.Global;
 
 public class rightColorSensor extends Thread {
 
+	public static long time = 0;
 	public rightColorSensor() {}
 	
 	@Override
@@ -17,7 +18,8 @@ public class rightColorSensor extends Thread {
 				Global.rightColor = Global.rightColorData[0];
 				
 				if (Global.rightColor< Global.colorThreshhold) {
-					Global.rightBlackLineDetected =true;
+					Global.rightBlackLineDetected =true;					
+					
 					try {
 						Thread.sleep(Global.THREAD_SLEEP_TIME);
 					} catch (InterruptedException e) {

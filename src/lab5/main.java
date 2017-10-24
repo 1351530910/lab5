@@ -56,27 +56,16 @@ public class main {
 		public static float rightColor = 0;
 		public static boolean rightBlackLineDetected = false;
 		
-		/*
-		public static frontColorSensor frontColorSensorThread;
-		public static Port frontColorSensorPort;
-		public static EV3ColorSensor frontColorSensor;
-		public static float[] frontColorData;
-		public static SampleProvider frontColorProvider;
-		public static float frontColor = 0;
-		public static float R = 0;
-		public static float G = 0;
-		public static float B = 0;
-		*/
 		
 
 		// constants
-		public static final int ACCELERATION = 100;
+		public static final int ACCELERATION = 2000;
 		public static final double WHEEL_RADIUS = 2.116;
-		public static final double TRACK = 9.95;
+		public static final double TRACK = 10.0;
 		public static final int ROTATING_SPEED = 90;
-		public static final int MOVING_SPEED = 150;
-		public static final double ROBOT_LENGTH = 10.5;
-		public static final int COLOR_SENSOR_OFFSET_ANGLE = 27;
+		public static final int MOVING_SPEED = 125;
+		public static double ROBOT_LENGTH = 10.5;
+		public static final int COLOR_SENSOR_OFFSET_ANGLE = 29;
 		public static final int COLOR_SENSOR_OFFSET_ANGLE_WITH_BLACKBAND = 31;
 		public static final double SQUARE_LENGTH = 30.5;
 		public static final int KEEP_MOVING = 3000;
@@ -137,7 +126,6 @@ public class main {
 		Global.usSensorThread = new UltraSonicSensor();
 		Global.colorSensorThread = new ColorSensor();
 		Global.rightcolorSensorThread = new rightColorSensor();
-		//Global.frontColorSensorThread = new frontColorSensor();
 		
 		try {
 			Thread.sleep(Global.THREAD_SLEEP_TIME);
@@ -146,11 +134,11 @@ public class main {
 		}
 		Global.colorSensorThread.start();
 		Global.rightcolorSensorThread.start();
-		//Global.frontColorSensorThread.start();
 
 		// get a starting value for color sensor
 		Global.colorSensorSwitch = true;
-		
+		Global.secondLine = "Waiting ...";
+		Button.waitForAnyPress();
 		while(Global.leftColor==0) {
 			
 		}
@@ -161,9 +149,6 @@ public class main {
 		setStartingXY();
 		setZiplineXY();
 		setSC();
-		
-		Global.rightMotor.setAcceleration(Global.ACCELERATION);
-		Global.leftMotor.setAcceleration(Global.ACCELERATION);
 		
 		Navigation mainthread = new Navigation();
 		mainthread.start();
@@ -227,8 +212,9 @@ public class main {
 		}
 	}
 	static void setSC() {
-		Global.firstLine = "Set zipline XY";
-
+		Global.firstLine = "Set Starting corner";
+		Global.secondLine = "";
+		Global.thirdLine = "";
 		while (true) {
 			Global.secondLine = "SC = " + Global.SC;
 			switch (Button.waitForAnyPress()) {

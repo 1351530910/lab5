@@ -14,43 +14,22 @@ public class Navigation extends Thread {
 	public void run() {
 		try {
 			Global.firstLine = "navigating";
-			reposition();
-			Thread.sleep(100000);
+			Global.secondLine = "";
+			Global.thirdLine = "";
+			
 			FallingEdge();
 			lightPosition();
+
 			checkSC();
 			travelTo(Global.startingX, Global.startingY);
+			
 			travelZipLine();
-			zipLineCorrection();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	public void reposition() throws Exception{
-		Global.colorSensorSwitch = true;
-		Thread.sleep(Global.THREAD_SLEEP_TIME);
-		double lefttime = 0;
-		double righttime = 0;
-		move(Global.SQUARE_LENGTH, true);
-		while (lefttime==0||righttime==0) {
-			if (Global.BlackLineDetected) {
-				lefttime = System.currentTimeMillis();
-				Global.forthLine = ""+lefttime;
-			}
-			if(Global.rightBlackLineDetected) {
-				righttime = System.currentTimeMillis();
-				Global.fifthLine = ""+righttime;
-			}
-			
-		}
-		double diff = righttime-lefttime;
-		double angle = diff*Global.ratio;
-		
-		turn(angle, false);
-		Global.colorSensorSwitch = false;
-		
-	}
+	
 	public void checkSC() throws Exception{
 		switch (Global.SC) {
 		case 0:
@@ -93,37 +72,6 @@ public class Navigation extends Thread {
 		}
 		move(Global.ZIPLINE_LENGTH, false);
 		Global.ziplineMotor.stop();
-	}
-
-	public void zipLineCorrection() throws Exception {
-
-		Global.colorSensorSwitch = true;
-		Thread.sleep(Global.THREAD_SLEEP_TIME);
-		
-		//depending on how much time we have we might change the loop
-		for (int i = 0; i < 3; i++) {
-			// move until sensor sees black line
-			move(Global.KEEP_MOVING, true);
-			Global.BlackLineDetected = false;
-			while (!Global.BlackLineDetected) {
-
-			}
-			// move back to black line
-			move(-Global.ROBOT_LENGTH+1.5, false);
-			Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
-			// reset angle
-			// turn until color sensor sees a black line
-			turn(Global.KEEP_MOVING, true);
-			Global.BlackLineDetected = false;
-			while (!Global.BlackLineDetected) {
-
-			}
-
-			// face 0 degree
-			turn(Global.COLOR_SENSOR_OFFSET_ANGLE-90, false);
-		}
-		
-		Global.colorSensorSwitch = false;
 	}
 
 	public void travelTo(int x, int y) throws Exception {
@@ -184,6 +132,7 @@ public class Navigation extends Thread {
 				
 			}
 			if (y > Global.Y) {
+				Global.Y--;
 				move(Global.KEEP_MOVING, true);
 				while (Global.Y <= y) {
 					Global.forthLine = ""+Global.Y;
