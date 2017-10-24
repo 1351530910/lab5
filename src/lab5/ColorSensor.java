@@ -3,7 +3,6 @@ package lab5;
 import lab5.main.Global;
 
 public class ColorSensor extends Thread {
-
 	public ColorSensor() {}
 	
 	@Override

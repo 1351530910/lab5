@@ -23,6 +23,7 @@ public class Navigation extends Thread {
 			checkSC();
 			travelTo(Global.startingX, Global.startingY);
 			
+			Button.waitForAnyPress();
 			travelZipLine();
 			
 		} catch (Exception e) {
@@ -75,6 +76,7 @@ public class Navigation extends Thread {
 	}
 
 	public void travelTo(int x, int y) throws Exception {
+		//this is working only if we start from the starting point
 		// start requiring threads
 		Global.colorSensorSwitch = true;
 		Global.secondLine = "travel to " + x + "," + y;
@@ -88,10 +90,13 @@ public class Navigation extends Thread {
 		Global.thirdLine = "travel x";
 		if (x != Global.X) {// verify if moving in x is needed
 
+			//moving forward
 			if (x > Global.X) {
-				Global.X--;//because our color sensor is behind
-				move(Global.KEEP_MOVING, true);
-				while (Global.X <= x) {
+				move(-30,false);//wall correction
+				
+				move(Global.KEEP_MOVING, true);//keep moving forward
+				
+				while (Global.X <= x) {//count the blacklines traveled and stop when the destination is reached
 					Global.forthLine = ""+Global.X;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
@@ -100,11 +105,15 @@ public class Navigation extends Thread {
 					}
 					
 				}
-				move(-Global.ROBOT_LENGTH, false);
+				move(-Global.ROBOT_LENGTH, false);//position the robot to the center
 			} 
+			//moving backward
 			else {
-				move(-Global.KEEP_MOVING, true);
-				while (Global.X > x) {
+				move(30,false);//wall correction
+				
+				move(-Global.KEEP_MOVING, true);//keep moving backward
+				
+				while (Global.X >= x) {//count the blacklines traveled and stop when the destination is reached
 					Global.forthLine = ""+Global.X;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
@@ -112,29 +121,36 @@ public class Navigation extends Thread {
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
-				move(-Global.ROBOT_LENGTH, false);
+				
+				move(-Global.ROBOT_LENGTH, false);//position the robot to the center
 			}
 		}
-
+		
+		//turn to the correct direction using the black lines
 		turn(-Global.KEEP_MOVING, true);
 		Thread.sleep(Global.THREAD_SLEEP_TIME);
 		Global.BlackLineDetected = false;
 		while (!Global.BlackLineDetected) {
 
 		}
-		turn(Global.COLOR_SENSOR_OFFSET_ANGLE-2, false);
+		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
+		
+		//update display
 		Global.thirdLine = "travel y;";
 		Global.forthLine = ""+Global.Y;
 		
+		
 		// move across y
-		if (y != Global.Y) {
+		if (y != Global.Y) {//if moving in y is needed
 			while(Global.leftMotor.isMoving()) {
 				
 			}
 			if (y > Global.Y) {
-				Global.Y--;
-				move(Global.KEEP_MOVING, true);
-				while (Global.Y <= y) {
+				move(-30,false);//wall correction
+				
+				move(Global.KEEP_MOVING, true);//keep moving forward
+				
+				while (Global.Y <= y) {//count the blacklines traveled and stop when the destination is reached
 					Global.forthLine = ""+Global.Y;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
@@ -142,9 +158,13 @@ public class Navigation extends Thread {
 						Thread.sleep(Global.THREAD_SHORT_SLEEP_TIME);
 					}
 				}
-			} else {
-				move(-Global.KEEP_MOVING, true);
-				while (Global.Y > y) {
+			} 
+			else {
+				move(30,false);//wall correction
+				
+				move(-Global.KEEP_MOVING, true);//keep moving backward
+				
+				while (Global.Y >= y) {//count the blacklines traveled and stop when the destination is reached
 					Global.forthLine = ""+Global.Y;
 					if (Global.BlackLineDetected) {
 						Global.BlackLineDetected = false;
@@ -154,13 +174,17 @@ public class Navigation extends Thread {
 				}
 			}
 		}
-		Global.X = x;
-		Global.Y = y;
-		move(-Global.ROBOT_LENGTH, false);
+		
+		
+		move(-Global.ROBOT_LENGTH, false);//reposition the robot the the center
+		
 		// turn and rescan the angle
 		turn(90, false);
 		Global.colorSensorSwitch = false;
 		
+		//wall correction
+		move(-30,false);
+		move(30,false);
 	}
 
 	public void FallingEdge() throws Exception{
@@ -226,6 +250,8 @@ public class Navigation extends Thread {
 		Global.secondLine = "light positionning";
 		Thread.sleep(Global.THREAD_SLEEP_TIME); // wait color sensor to get its values
 
+		
+		
 		// reset X
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
@@ -240,10 +266,12 @@ public class Navigation extends Thread {
 		// reset angle
 		// turn until color sensor sees a black line then turn to 90 degree
 		turn(-Global.KEEP_MOVING, true);
-		while (!Global.BlackLineDetected) {
-		}
+		while (!Global.BlackLineDetected) {}
 		turn(Global.COLOR_SENSOR_OFFSET_ANGLE, false);
 
+		
+		
+		
 		// reset Y
 		// move until sensor sees black line
 		move(Global.KEEP_MOVING, true);
@@ -261,7 +289,7 @@ public class Navigation extends Thread {
 		// wait color sensor is turned off
 		Thread.sleep(200);
 
-		turn(90, false);
+		turn(92, false);
 		// reset coordinates
 		Global.angle = 0;
 	}

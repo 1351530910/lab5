@@ -48,15 +48,6 @@ public class main {
 		public static float colorThreshhold = 0;
 		public static boolean BlackLineDetected = false;
 		
-		public static rightColorSensor rightcolorSensorThread;
-		public static Port rightColorSensorPort;
-		public static EV3ColorSensor rightColorSensor;
-		public static float[] rightColorData;
-		public static SampleProvider rightColorProvider;
-		public static float rightColor = 0;
-		public static boolean rightBlackLineDetected = false;
-		
-		
 
 		// constants
 		public static final int ACCELERATION = 2000;
@@ -65,8 +56,8 @@ public class main {
 		public static final int ROTATING_SPEED = 90;
 		public static final int MOVING_SPEED = 125;
 		public static double ROBOT_LENGTH = 10.5;
-		public static final int COLOR_SENSOR_OFFSET_ANGLE = 29;
-		public static final int COLOR_SENSOR_OFFSET_ANGLE_WITH_BLACKBAND = 31;
+		public static final int COLOR_SENSOR_OFFSET_ANGLE = 31;
+		public static final int COLOR_SENSOR_OFFSET_ANGLE_WITH_BLACKBAND = 33;
 		public static final double SQUARE_LENGTH = 30.5;
 		public static final int KEEP_MOVING = 3000;
 		public static final int STOP_MOVING = 0;
@@ -114,18 +105,10 @@ public class main {
 		Global.leftColorSensor = new EV3ColorSensor(Global.leftColorSensorPort);
 		Global.leftColorProvider = Global.leftColorSensor.getRedMode();
 		Global.leftColorData = new float[Global.leftColorProvider.sampleSize() + 1];
-
-		
-		Global.rightColorSensorPort = LocalEV3.get().getPort("S3");
-		Global.rightColorSensor = new EV3ColorSensor(Global.rightColorSensorPort);
-		Global.rightColorProvider = Global.rightColorSensor.getRedMode();
-		Global.rightColorData = new float[Global.rightColorProvider.sampleSize() + 1];
-		
 		
 		// initializing threads
 		Global.usSensorThread = new UltraSonicSensor();
 		Global.colorSensorThread = new ColorSensor();
-		Global.rightcolorSensorThread = new rightColorSensor();
 		
 		try {
 			Thread.sleep(Global.THREAD_SLEEP_TIME);
@@ -133,7 +116,6 @@ public class main {
 			// TODO: handle exception
 		}
 		Global.colorSensorThread.start();
-		Global.rightcolorSensorThread.start();
 
 		// get a starting value for color sensor
 		Global.colorSensorSwitch = true;
